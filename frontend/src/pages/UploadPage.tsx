@@ -20,10 +20,11 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append('file', file);
 
-    axios.post('/upload', formData)
+    axios.post<string>('/upload', formData)
       .then((res) => {
-        console.log(res.data);
-        setDownloadLink('https://wsend.com/63634...')
+        if(res.status === 200 && typeof res.data === 'string'){
+          setDownloadLink(res.data)
+        }
       })
       .catch((err) => {
         console.log(err);
