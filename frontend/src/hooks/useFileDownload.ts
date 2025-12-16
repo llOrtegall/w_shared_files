@@ -1,26 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 export type FileData = {
   key: string;
   size?: number;
   lastModified: string;
-}
+};
 
 export type ResponseFileData = {
   success: boolean;
   files: FileData[];
-}
+};
 
 type UseFileDownloadReturn = {
   fileData: FileData | null;
   isLoading: boolean;
-  error: string | null
+  isDownloading: boolean;
+  error: string | null;
+  downloadFile: () => Promise<void>;
 };
 
 export const useFileDownload = (fileId: string | undefined): UseFileDownloadReturn => {
   const [fileData, setFileData] = useState<FileData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,10 +57,49 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
     fetchFileInfo();
   }, [fileId]);
 
+  const downloadFile = useCallback(async () => {
+    if (!fileData) return;
+
+    setIsDownloading(true);
+    setError(null);
+
+    try {
+      // Obtener URL de descarga firmada
+      const response = await axios.get(`/download-url/${fileData.key}`);
+      const { downloadUrl, success } = response.data;
+
+      if (!success || !downloadUrl) {
+        throw new Error('No se pudo obtener la URL de descarga.');
+      }
+
+      // Descargar el archivo como blob
+      const blobResponse = await axios.get(downloadUrl, {
+        responseType: 'blob',
+      });
+
+      // Crear blob URL local y descargar
+      const blobUrl = window.URL.createObjectURL(blobResponse.data);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', fileData.key);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Liberar el blob URL
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al descargar el archivo.');
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [fileData]);
 
   return {
     fileData,
     isLoading,
-    error
+    isDownloading,
+    error,
+    downloadFile,
   };
 };

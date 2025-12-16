@@ -1,5 +1,5 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { PutObjectCommand, ListObjectsV2Command, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { UploadUrlResponse } from "../types/index";
 import { r2Client, r2Config } from "../config/r2";
 
@@ -10,6 +10,14 @@ type SearchFileResponse = {
     size: number;
     lastModified: Date;
   }>;
+  error?: string;
+};
+
+type DownloadUrlResponse = {
+  success: boolean;
+  downloadUrl?: string;
+  key?: string;
+  expiresIn?: number;
   error?: string;
 };
 
@@ -81,7 +89,7 @@ export async function searchFiles(
 
     const command = new ListObjectsV2Command({
       Bucket: r2Config.bucketName,
-      MaxKeys: 1000,
+      MaxKeys: 10
     });
 
     const response = await r2Client.send(command);
@@ -112,6 +120,59 @@ export async function searchFiles(
     return {
       success: false,
       error: `Error al buscar archivos: ${error instanceof Error ? error.message : "Unknown error"}`,
+    };
+  }
+}
+
+/**
+ * Genera una URL firmada (GET) para descargar un archivo de R2
+ * Valida que el archivo exista antes de generar la URL
+ */
+export async function getDownloadPresignedUrl(key: string): Promise<DownloadUrlResponse> {
+  try {
+    // Verificar existencia del archivo antes de devolver la URL
+    try {
+      const headCommand = new HeadObjectCommand({
+        Bucket: r2Config.bucketName,
+        Key: key,
+      });
+      await r2Client.send(headCommand);
+    } catch (err) {
+      return {
+        success: false,
+        error: "Archivo no encontrado",
+      };
+    }
+
+    // Si los objetos son públicos, devolver la URL pública directamente
+    if (r2Config.objectsArePublic) {
+      return {
+        success: true,
+        downloadUrl: `${r2Config.publicUrl}/${key}`,
+        expiresIn: 0,
+        key,
+      };
+    }
+
+    // Generar URL firmada para descarga
+    const command = new GetObjectCommand({
+      Bucket: r2Config.bucketName,
+      Key: key,
+    });
+
+    const url = await getSignedUrl(r2Client, command, { expiresIn: r2Config.urlExpirySeconds || 300 });
+
+    return {
+      success: true,
+      downloadUrl: url,
+      key,
+      expiresIn: r2Config.urlExpirySeconds || 300,
+    };
+  } catch (error) {
+    console.error("Error al generar URL de descarga firmada:", error);
+    return {
+      success: false,
+      error: `Error al generar URL de descarga: ${error instanceof Error ? error.message : "Unknown error"}`,
     };
   }
 }

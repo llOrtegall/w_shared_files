@@ -4,6 +4,7 @@ import { r2Config } from "../config/r2";
 import {
   getUploadPresignedUrl,
   searchFiles,
+  getDownloadPresignedUrl,
 } from "../services/r2Service";
 
 // Configurar multer para manejo de uploads en memoria
@@ -89,6 +90,36 @@ export const searchFilesHandler = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: `Error al buscar archivos: ${error instanceof Error ? error.message : "Unknown error"}`,
+    });
+  }
+};
+
+/**
+ * Controlador para obtener URL de descarga de un archivo
+ */
+export const getDownloadUrlHandler = async (req: Request, res: Response) => {
+  try {
+    const { fileName } = req.params;
+
+    if (!fileName) {
+      return res.status(400).json({
+        success: false,
+        error: "Se requiere el nombre del archivo",
+      });
+    }
+
+    const result = await getDownloadPresignedUrl(fileName);
+
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error en getDownloadUrlHandler:", error);
+    return res.status(500).json({
+      success: false,
+      error: `Error al generar URL de descarga: ${error instanceof Error ? error.message : "Unknown error"}`,
     });
   }
 };
