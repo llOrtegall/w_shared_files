@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   uploadFileHandler,
-  downloadFileHandler,
   listFilesHandler,
   deleteFileHandler,
   getUploadUrlHandler,
@@ -19,9 +18,6 @@ fileRouter.post("/upload", uploadFileHandler);
 
 // Obtener URL firmada para subir directo (cliente PUT a R2)
 fileRouter.post("/upload-url", getUploadUrlHandler);
-
-// Descargar archivo
-fileRouter.get("/download/:fileName", downloadFileHandler);
 
 // Obtener URL para descarga directa (cliente GET a R2)
 fileRouter.get("/download-url/:fileName", getDownloadUrlHandler);
