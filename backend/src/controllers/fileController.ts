@@ -3,7 +3,6 @@ import multer, { Multer } from "multer";
 import { r2Config } from "../config/r2";
 import {
   uploadFile,
-  downloadFile,
   listFiles,
   deleteFile,
   getUploadPresignedUrl,
@@ -107,42 +106,6 @@ export const getUploadUrlHandler = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: `Error al generar URL de subida: ${error instanceof Error ? error.message : "Unknown error"}`,
-    });
-  }
-};
-
-/**
- * Controlador para descargar archivos
- */
-export const downloadFileHandler = async (req: Request, res: Response) => {
-  try {
-    const { fileName } = req.params;
-
-    if (!fileName) {
-      return res.status(400).json({
-        success: false,
-        error: "Se requiere el nombre del archivo",
-      });
-    }
-
-    const result = await downloadFile(fileName);
-
-    if (!result.success) {
-      return res.status(404).json(result);
-    }
-
-    res.setHeader("Content-Type", result.contentType || "application/octet-stream");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${fileName}"`
-    );
-
-    return res.send(result.data);
-  } catch (error) {
-    console.error("Error en downloadFileHandler:", error);
-    return res.status(500).json({
-      success: false,
-      error: `Error al descargar archivo: ${error instanceof Error ? error.message : "Unknown error"}`,
     });
   }
 };
