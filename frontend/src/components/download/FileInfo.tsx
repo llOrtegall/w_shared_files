@@ -6,23 +6,21 @@ type FileInfoProps = {
   onDownload: () => void;
 };
 
-const formatFileSize = (bytes: number): string => {
-  return (bytes / 1024 / 1024).toFixed(2);
-};
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString();
+const formatExpires = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return 'Expira pronto';
+  const mins = Math.max(1, Math.round(seconds / 60));
+  return `Link válido ~${mins} min`;
 };
 
 export default function FileInfo({ fileData, onDownload }: FileInfoProps) {
   return (
     <section className="bg-green-5 min-w-156.5 flex flex-col items-center px-12 py-4 rounded-3xl space-y-4">
-      <h2 className="font-imb-600 text-lg text-gray-200">{fileData.originalName}</h2>
+      <h2 className="font-imb-600 text-lg text-gray-200 text-center wrap-break-word">{fileData.originalName}</h2>
 
-      <article className="font-imb-400 text-sm text-gray-1 flex items-center gap-4">
-        <span>{formatFileSize(fileData.size)} MB</span>
+      <article className="font-imb-400 text-sm text-gray-1 flex items-center gap-2">
+        <span className="truncate max-w-64" title={fileData.key}>{fileData.key}</span>
         <span>•</span>
-        <span>{formatDate(fileData.uploadDate)}</span>
+        <span>{formatExpires(fileData.expiresIn)}</span>
       </article>
 
       <button
