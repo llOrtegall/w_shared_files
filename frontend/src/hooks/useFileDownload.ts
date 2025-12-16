@@ -64,8 +64,11 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
     setError(null);
 
     try {
+      // Codificar el nombre del archivo para manejar caracteres especiales
+      const encodedKey = encodeURIComponent(fileData.key);
+      
       // Obtener URL de descarga firmada
-      const response = await axios.get(`/download-url/${fileData.key}`);
+      const response = await axios.get(`/download-url/${encodedKey}`);
       const { downloadUrl, success } = response.data;
 
       if (!success || !downloadUrl) {

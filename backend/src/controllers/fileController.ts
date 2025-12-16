@@ -99,7 +99,7 @@ export const searchFilesHandler = async (req: Request, res: Response) => {
  */
 export const getDownloadUrlHandler = async (req: Request, res: Response) => {
   try {
-    const { fileName } = req.params;
+    let { fileName } = req.params;
 
     if (!fileName) {
       return res.status(400).json({
@@ -107,6 +107,9 @@ export const getDownloadUrlHandler = async (req: Request, res: Response) => {
         error: "Se requiere el nombre del archivo",
       });
     }
+
+    // Decodificar el nombre del archivo en caso de caracteres especiales
+    fileName = decodeURIComponent(fileName);
 
     const result = await getDownloadPresignedUrl(fileName);
 
