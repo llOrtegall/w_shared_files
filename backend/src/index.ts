@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { fileRouter } from "./routes/fileRoutes";
 import morgan from "morgan";
 import dotenv from "dotenv";
@@ -24,50 +24,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-// Rutas de salud
-app.get("/", (req: Request, res: Response) => {
-  res.json({
-    message: "API R2 funcionando correctamente",
-    version: "1.0.0",
-    endpoints: {
-      upload: "POST /api/files/upload",
-      download: "GET /api/files/download/:fileName",
-      list: "GET /api/files/list",
-      delete: "DELETE /api/files/:fileName",
-    },
-  });
-});
-
-app.get("/health", (req: Request, res: Response) => {
-  res.json({ status: "ok" });
-});
-
 // Rutas de archivos
 app.use("/api/v1/files", fileRouter);
-
-// Manejo de rutas no encontradas
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    error: "Ruta no encontrada",
-  });
-});
-
-// Manejo de errores
-app.use(
-  (
-    err: any,
-    req: Request,
-    res: Response,
-    next: (err?: any) => void
-  ) => {
-    console.error("Error:", err);
-    res.status(500).json({
-      success: false,
-      error: err.message || "Error interno del servidor",
-    });
-  }
-);
 
 // Iniciar servidor
 app.listen(PORT, () => {
