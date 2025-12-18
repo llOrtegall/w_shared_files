@@ -41,10 +41,11 @@ export interface UploadUrlResponse {
   error?: string;
 }
 
-export interface DownloadUrlResponse {
+export type DownloadUrlResponse = {
   success: boolean;
   downloadUrl?: string;
   key?: string;
   expiresIn?: number;
   error?: string;
-}
+  LastModified?: Date | undefined;
+};
