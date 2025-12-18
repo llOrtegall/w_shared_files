@@ -59,9 +59,10 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
     setError(null);
 
     try {
-      // Descargar el archivo como blob
+      // Descargar el archivo como blob sin enviar credenciales (es una URL pre-firmada)
       const blobResponse = await axios.get(downloadUrl, {
         responseType: 'blob',
+        withCredentials: false, // R2 no requiere credenciales con URLs pre-firmadas
       });
 
       // Crear blob URL local y descargar

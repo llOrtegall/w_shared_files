@@ -8,6 +8,7 @@ import './index.css';
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
 
 axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.withCredentials = true;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

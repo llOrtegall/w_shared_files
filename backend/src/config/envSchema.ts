@@ -13,6 +13,7 @@ const envSchema = z.object({
   R2_OBJECTS_PUBLIC: z.string().optional(),
   NODE_ENV: z.enum(["development", "production"]).optional().default("development"),
   PORT: z.string().transform((val) => parseInt(val)),
+  CORS_ORIGIN: z.string(),
 })
 
 const { success, data, error } = envSchema.safeParse(process.env);
@@ -32,6 +33,7 @@ export const {
   R2_ENDPOINT,
   ALLOWED_TYPES,
   MAX_FILE_SIZE,
+  CORS_ORIGIN,
   PORT,
   NODE_ENV,
  } = data;
