@@ -18,6 +18,14 @@ type UseFileUploadReturn = {
   resetUpload: () => void;
 };
 
+type UploadResponse = {
+  expiresIn: number;
+  key: string;
+  publicUrl: string;
+  success: boolean;
+  uploadUrl: string;
+}
+
 export const useFileUpload = (): UseFileUploadReturn => {
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -31,14 +39,14 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
     try {
       // 1. Solicitar URL firmada al backend
-      const getUrlRes = await axios.post('/upload-url', {
+      const getUrlRes = await axios.post<UploadResponse>('/upload-url', {
         fileName: file.name,
         contentType: file.type,
         expectedSize: file.size,
       });
 
       if (!getUrlRes.data?.success || !getUrlRes.data?.uploadUrl) {
-        throw new Error(getUrlRes.data?.error || 'No se pudo obtener la URL de subida');
+        throw new Error('No se pudo obtener la URL de subida');
       }
 
       // 2. Subir el archivo directamente a R2 usando XMLHttpRequest para obtener progreso
@@ -53,10 +61,10 @@ export const useFileUpload = (): UseFileUploadReturn => {
             const currentTime = Date.now();
             const timeElapsed = (currentTime - lastTime) / 1000; // segundos
             const bytesUploaded = e.loaded - lastLoaded;
-            
+
             // Calcular velocidad instantánea
             const speed = timeElapsed > 0 ? bytesUploaded / timeElapsed : 0;
-            
+
             // Calcular tiempo estimado restante
             const bytesRemaining = e.total - e.loaded;
             const estimatedTimeRemaining = speed > 0 ? bytesRemaining / speed : 0;
@@ -76,8 +84,13 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
         xhr.addEventListener('load', () => {
           if (xhr.status === 200) {
-            setDownloadLink(getUrlRes.data.publicUrl);
-            resolve();
+
+            if (getUrlRes.data.publicUrl) {
+              const keyFile = getUrlRes.data.publicUrl.split('/').pop();
+              setDownloadLink(`http://localhost:5173/download/${keyFile}`);
+              resolve();
+            }
+            
           } else {
             reject(new Error(`Error en la subida: ${xhr.status}`));
           }
