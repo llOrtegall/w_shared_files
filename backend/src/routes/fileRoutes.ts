@@ -1,8 +1,5 @@
+import { getUploadUrlHandler, getDownloadUrlHandler } from "../controllers/fileController";
 import { Router } from "express";
-import {
-  getUploadUrlHandler,
-  getDownloadUrlHandler,
-} from "../controllers/fileController";
 
 export const fileRouter = Router();
 
