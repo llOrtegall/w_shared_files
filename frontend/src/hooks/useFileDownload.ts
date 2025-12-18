@@ -2,14 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 export type FileData = {
-  key: string;
-  size?: number;
-  lastModified: string;
-};
-
-export type ResponseFileData = {
   success: boolean;
-  files: FileData[];
+  downloadUrl: string;
+  key: string;
+  size: number;
+  lastModified: string;
 };
 
 type UseFileDownloadReturn = {
@@ -17,7 +14,7 @@ type UseFileDownloadReturn = {
   isLoading: boolean;
   isDownloading: boolean;
   error: string | null;
-  downloadFile: () => Promise<void>;
+  downloadFile: (downloadUrl: string, key: string) => Promise<void>;
 };
 
 export const useFileDownload = (fileId: string | undefined): UseFileDownloadReturn => {
@@ -38,14 +35,13 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
       setError(null);
 
       try {
-        const response = await axios.get<ResponseFileData>(`/search?searchTerm=${fileId}&exactMatch=false`);
-        const data = response.data;
+        const response = await axios.get<FileData>(`/download-url/${fileId}`);
 
-        if (!data.success || data.files.length === 0) {
+        if (!response.data.success) {
           throw new Error('El archivo no existe o ya expiró.');
         }
 
-        setFileData(data.files[0]);
+        setFileData(response.data);
       } catch {
         setError('El archivo no existe o ya expiró.');
         setFileData(null);
@@ -57,24 +53,12 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
     fetchFileInfo();
   }, [fileId]);
 
-  const downloadFile = useCallback(async () => {
-    if (!fileData) return;
-
+  const downloadFile = useCallback(async (downloadUrl: string, key: string) => {
+    if (!downloadUrl || !key) return;
     setIsDownloading(true);
     setError(null);
 
     try {
-      // Codificar el nombre del archivo para manejar caracteres especiales
-      const encodedKey = encodeURIComponent(fileData.key);
-      
-      // Obtener URL de descarga firmada
-      const response = await axios.get(`/download-url/${encodedKey}`);
-      const { downloadUrl, success } = response.data;
-
-      if (!success || !downloadUrl) {
-        throw new Error('No se pudo obtener la URL de descarga.');
-      }
-
       // Descargar el archivo como blob
       const blobResponse = await axios.get(downloadUrl, {
         responseType: 'blob',
@@ -84,7 +68,7 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
       const blobUrl = window.URL.createObjectURL(blobResponse.data);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.setAttribute('download', fileData.key);
+      link.setAttribute('download', key);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -96,7 +80,7 @@ export const useFileDownload = (fileId: string | undefined): UseFileDownloadRetu
     } finally {
       setIsDownloading(false);
     }
-  }, [fileData]);
+  }, []);
 
   return {
     fileData,
