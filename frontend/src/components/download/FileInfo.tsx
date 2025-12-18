@@ -4,22 +4,22 @@ import type { FileData } from '../../hooks/useFileDownload';
 type FileInfoProps = {
   fileData: FileData;
   isDownloading?: boolean;
-  onDownload?: () => Promise<void>;
+  onDownload?: (downloadUrl: string, key: string) => Promise<void>;
 };
 
 export default function FileInfo({ fileData, isDownloading = false, onDownload }: FileInfoProps) {
   return (
     <section className="bg-green-5 min-w-156.5 flex flex-col items-center px-12 py-4 rounded-3xl space-y-4">
-      <h2 className="font-imb-600 text-lg text-gray-200 text-center wrap-break-word">{fileData.key.split('-').slice(1).join('-')}</h2>
+      <h2 className="font-imb-600 text-lg text-gray-200 text-center wrap-break-word">{fileData.key}</h2>
 
       <article className="font-imb-400 text-sm text-gray-1 flex items-center gap-2">
         <span className="truncate max-w-64" title={fileData.key}>{fileData.key}</span>
         <span>•</span>
-        <span>{fileData.lastModified.slice(0, 10)}</span>
+        <span>{fileData.lastModified}</span>
       </article>
 
       <button
-        onClick={onDownload}
+        onClick={() => onDownload && onDownload(fileData.downloadUrl, fileData.key)}
         disabled={isDownloading}
         className="min-w-45.75 bg-white text-lg text-green-2 font-imb-600 px-10 py-1 rounded-md hover:bg-green-4 hover:text-white transition-colors duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label={`Download ${fileData.key}`}
