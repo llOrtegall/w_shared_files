@@ -21,7 +21,6 @@ type UseFileUploadReturn = {
 type UploadResponse = {
   expiresIn: number;
   key: string;
-  publicUrl: string;
   success: boolean;
   uploadUrl: string;
 }
@@ -84,13 +83,12 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
         xhr.addEventListener('load', () => {
           if (xhr.status === 200) {
-
-            if (getUrlRes.data.publicUrl) {
-              const keyFile = getUrlRes.data.publicUrl.split('/').pop();
+            // Usar el key devuelto por el backend
+            const keyFile = getUrlRes.data.key;
+            if (keyFile) {
               setDownloadLink(`http://localhost:5173/download/${keyFile}`);
-              resolve();
             }
-            
+            resolve();
           } else {
             reject(new Error(`Error en la subida: ${xhr.status}`));
           }

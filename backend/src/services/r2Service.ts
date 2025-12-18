@@ -1,16 +1,7 @@
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PutObjectCommand, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
-import { UploadUrlResponse } from "../types/index";
+import { UploadUrlResponse, DownloadUrlResponse } from "../types/index";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { r2Client, r2Config } from "../config/r2";
-
-type DownloadUrlResponse = {
-  success: boolean;
-  downloadUrl?: string;
-  key?: string;
-  expiresIn?: number;
-  error?: string;
-  LastModified?: Date | undefined;
-};
 
 /**
  * Genera una URL firmada (PUT) para subir directo a R2 sin pasar por el VPS
@@ -51,7 +42,6 @@ export async function getUploadPresignedUrl(
       success: true,
       uploadUrl: url,
       key,
-      publicUrl: `${r2Config.publicUrl}/${key}`,
       expiresIn: r2Config.urlExpirySeconds || 300,
     };
   } catch (error) {
